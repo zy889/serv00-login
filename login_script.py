@@ -1,7 +1,7 @@
 import json
 import asyncio
 from pyppeteer import launch
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import aiofiles
 import random
 import requests
@@ -10,6 +10,7 @@ import os
 # 从环境变量中获取Telegram Bot Token和Chat ID
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+SCKEY = os.getenv('SCKEY')  # 获取SCKEY环境变量
 
 def format_to_iso(date):
     return date.strftime('%Y-%m-%d %H:%M:%S')
@@ -66,17 +67,17 @@ async def login(username, password, panel):
         if page:
             await page.close()
 
-# 添加发送消息到Server酱的函数
 async def send_serverchan_message(message):
-    sckey = os.getenv('SCKEY')  # 假设你将SCKEY设置为环境变量
-    if sckey:
-        url = f"https://sct.ftqq.com/{sckey}.send"
+    if SCKEY:
+        url = f"https://sct.ftqq.com/{SCKEY}.send"
         payload = {
             'title': 'serv00&ct8自动化脚本通知',
             'desp': message
         }
         try:
             response = requests.post(url, data=payload)
+            print(f"ServerChan response status code: {response.status_code}")
+            print(f"ServerChan response text: {response.text}")
             if response.status_code!= 200:
                 print(f"发送消息到ServerChan失败: {response.text}")
         except Exception as e:
@@ -105,8 +106,8 @@ async def main():
         is_logged_in = await login(username, password, panel)
 
         if is_logged_in:
-            now_utc = format_to_iso(datetime.utcnow())
-            now_beijing = format_to_iso(datetime.utcnow() + timedelta(hours=8))
+            now_utc = format_to_iso(datetime.now(timezone.utc))  # 修改为使用时区感知的方式获取UTC时间
+            now_beijing = format_to_iso(datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=8))))  # 修改为使用时区感知的方式获取北京时间
             success_message = f'{serviceName}账号 {username} 于北京时间 {now_beijing}（UTC时间 {now_utc}）登录成功！'
             message += success_message + '\n'
             print(success_message)
