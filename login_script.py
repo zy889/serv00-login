@@ -69,7 +69,7 @@ async def login(username, password, panel):
 
 async def send_serverchan_message(message):
     if SCKEY:
-        url = f"https://sct.ftqq.com/{SCKEY}.send"
+        url = f"https://sctapi.ftqq.com/{SCKEY}.send"
         payload = {
             'title': 'serv00&ct8自动化脚本通知',
             'desp': message
