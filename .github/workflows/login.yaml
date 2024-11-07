@@ -32,9 +32,27 @@ jobs:
           pip install --upgrade pyppeteer
 
       - name: 运行登录脚本
+        id: run_script
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SCKEY: ${{ secrets.SCKEY }}
           ACCOUNTS_JSON: ${{ secrets.ACCOUNTS_JSON }}
         run: |
           python login_script.py
+          echo "::set-output name=exitcode::$?"  # 设置脚本的退出码作为输出变量
+
+      - name: 检查脚本执行结果
+        if: steps.run_script.outputs.exitcode!= 0
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueTitle = 'Login Script Execution Failed';
+            const issueBody = `The login script failed with exit code ${steps.run_script.outputs.exitcode}. Please check the logs for details.`;
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody
+            });
