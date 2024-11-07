@@ -7,7 +7,7 @@ import random
 import requests
 import os
 
-# 从环境变量中获取 Telegram Bot Token 和 Chat ID
+# 从环境变量中获取Telegram Bot Token和Chat ID
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
@@ -26,7 +26,7 @@ message = 'serv00&ct8自动化脚本运行\n'
 async def login(username, password, panel):
     global browser
 
-    page = None  # 确保 page 在任何情况下都被定义
+    page = None  # 确保page在任何情况下都被定义
     serviceName = 'ct8' if 'ct8' in panel else 'serv00'
     try:
         if not browser:
@@ -53,7 +53,7 @@ async def login(username, password, panel):
 
         is_logged_in = await page.evaluate('''() => {
             const logoutButton = document.querySelector('a[href="/logout/"]');
-            return logoutButton !== null;
+            return logoutButton!== null;
         }''')
 
         return is_logged_in
@@ -66,6 +66,24 @@ async def login(username, password, panel):
         if page:
             await page.close()
 
+# 添加发送消息到Server酱的函数
+async def send_serverchan_message(message):
+    sckey = os.getenv('SCKEY')  # 假设你将SCKEY设置为环境变量
+    if sckey:
+        url = f"https://sct.ftqq.com/{sckey}.send"
+        payload = {
+            'title': 'serv00&ct8自动化脚本通知',
+            'desp': message
+        }
+        try:
+            response = requests.post(url, data=payload)
+            if response.status_code!= 200:
+                print(f"发送消息到ServerChan失败: {response.text}")
+        except Exception as e:
+            print(f"发送消息到ServerChan时出错: {e}")
+    else:
+        print("未找到SCKEY环境变量，无法发送ServerChan消息")
+
 async def main():
     global message
     message = 'serv00&ct8自动化脚本运行\n'
@@ -75,7 +93,7 @@ async def main():
             accounts_json = await f.read()
         accounts = json.loads(accounts_json)
     except Exception as e:
-        print(f'读取 accounts.json 文件时出错: {e}')
+        print(f'读取accounts.json文件时出错: {e}')
         return
 
     for account in accounts:
@@ -101,6 +119,7 @@ async def main():
         
     message += f'所有{serviceName}账号登录完成！'
     await send_telegram_message(message)
+    await send_serverchan_message(message)
     print(f'所有{serviceName}账号登录完成！')
 
 async def send_telegram_message(message):
@@ -124,7 +143,7 @@ async def send_telegram_message(message):
     }
     try:
         response = requests.post(url, json=payload, headers=headers)
-        if response.status_code != 200:
+        if response.status_code!= 200:
             print(f"发送消息到Telegram失败: {response.text}")
     except Exception as e:
         print(f"发送消息到Telegram时出错: {e}")
